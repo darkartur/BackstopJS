@@ -1,4 +1,4 @@
-var resemble = require('node-resemble-js');
+var resemble = require('node-resemble-js-raw');
 
 module.exports = function (referencePath, testPath, misMatchThreshold, resembleOutputSettings, requireSameDimensions) {
   return new Promise(function (resolve, reject) {
