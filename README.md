@@ -98,6 +98,8 @@ As a new user setting up tests for your project, you will be primarily concerned
 - **`scenarios[n].label`** – Required. Also used for screenshot naming.
 - **`scenarios[n].url`** – Required. Tells BackstopJS what endpoint/document you want to test.  This can be an absolute URL or local to your current working directory.
 
+_TIP: no other SCENARIO properties are required. Other properties can just be added as necessary_
+
 ### Generating test bitmaps
 
 ```sh
@@ -121,7 +123,9 @@ Pass a `--filter=<scenarioLabelRegex>` argument to just run scenarios matching y
 $ backstop approve
 ```
 
-Change can be good!  When running this command, all images (with changes) from your most recent test batch will be promoted to your reference collection. Subsequent tests will be compared against your updated reference files.
+When running this command, all images (with changes) from your most recent test batch will be promoted to your reference collection. Subsequent tests will be compared against your updated reference files.
+
+Pass a `--filter=<scenarioLabelRegex>` argument to promote only the test captures matching your scenario label.
 
 **Tip**: Remember to pass a `--config=<configFilePathStr>` argument if you passed that when you ran your last test.
 
@@ -134,6 +138,7 @@ Scenario properties are described throughout this document and **processed seque
 ```js
 label                    // [required] Tag saved with your reference images
 onBeforeScript           // Used to set up browser state e.g. cookies.
+cookiePath               // import cookies in JSON format (available with default onBeforeScript see setting cookies below)
 url                      // [required] The url of your app state
 referenceUrl             // Specify a different state or enviornment when creating reference.
 readyEvent               // Wait until this string has been logged to the console.
@@ -150,6 +155,30 @@ selectorExpansion        // See Targeting elements in the next section for more 
 misMatchThreshold        // Around of change before a test is marked failed
 requireSameDimensions    // If set to true -- any change in selector size will trigger a test failure.
 ```
+
+
+### Testing click and hover interactions 
+BackstopJS ships with an onReady script that enables the following interaction selectors...
+```
+clickSelector: ".my-hamburger-menu",
+hoverSelector: ".my-hamburger-menu .some-menu-item",
+```
+The above would tell BackstopJS to wait for your app to generate an element with a `.my-hamburger-menu` class, then click that selector.   Then it would wait again for a `.my-hamburger-menu .some-menu-item` class, then move the cursor over that element (causing a hover state).  Then BackstopJS would take a screenshot.
+
+You can use these properties independent of each other to easily test various click and or hover states in your app.  These are obviously simple scenarios -- if you have more complex needs then this example should serve as a pretty good starting point create your own onReady scripts.
+
+
+### Setting cookies
+BackstopJS ships with an onBefore script that makes it easy to import cookie files…
+```
+cookiePath: "backstop_data/engine_scripts/cookies.json",
+```
+_note: path is relative to your current working directory_
+
+Pro tip:  If your app uses a lot of cookies then do yourself a favor and download this extension for chrome. It adds a tab to your dev-tools so you can download all your cookies as a JSON file that you can directly use with BackstopJS  https://chrome.google.com/webstore/detail/cookie-inspector/jgbbilmfbammlbbhmmgaagdkbkepnijn?hl=en
+
+
+
 
 ### Targeting elements
 
@@ -480,13 +509,30 @@ This is for you if for some reason you find yourself needing advanced configurat
 ```
 
 ### Integration options (local install)
-If you are going to call backstop from another app you will probably want to do a local install in the project directory of your choice...
+
+Installing BackstopJS locally to your project makes a few integration options available.
+
+The most basic example probably looks like this....
+
+```
+# Install from your project root
+npm install backstopjs
+
+# Set up a new project
+./node_modules/backstopjs/cli/index.js init
+
+# Run a test etc...
+./node_modules/backstopjs/cli/index.js test --config=<myConfigPath>
+```
+
+If you are going to call backstop from another app you will probably want to do something like this...
 
 ```sh
 $ npm install backstopjs
 ```
 
-Once installed you can simply require a local backstop installation in your project.
+Once installed you can require your local backstop installation into your project.
+
 ```js
 const backstop = require('backstopjs');
 ```
@@ -506,7 +552,7 @@ backstop('test')
 backstop('test', {config:'custom/backstop/config.json'});
 ```
 
-#### Pass a config to the command
+#### Pass a config object to the command
 ```js
 // you can also pass
 backstop('test', {
